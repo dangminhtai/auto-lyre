@@ -5,13 +5,15 @@
 ## Sử dụng
 
 1. Mở Genshin Impact và giao diện chơi đàn.
-2. Mở Auto Lyre, chọn **Chọn bản nhạc** rồi chọn tệp `.mid` hoặc `.midi`.
-3. Trong **Thiết lập đàn**, chọn đúng loại đàn và bố cục bàn phím. Chọn đường dẫn trò chơi nếu ứng dụng chưa tìm thấy.
+2. Mở Auto Lyre và chọn đúng **Loại đàn**.
+3. Nhấn **Chọn bản nhạc** rồi chọn tệp `.mid` hoặc `.midi`.
 4. Nhấn **Phát**. **Tạm dừng** giữ vị trí bài; **Dừng** đưa bài về đầu. Chuyển khỏi cửa sổ trò chơi sẽ tạm dừng phát.
 
-Hỗ trợ hiện tại: Đàn Cầm Của Gió, Đàn Hoa, Đàn Lyre Cũ. Không cần chọn tông hoặc nốt gốc. Nốt ngoài khả năng của đàn sẽ được điều chỉnh; không đảm bảo mọi bản MIDI nghe giống nguyên bản.
+V3 có 12 profile. Đang bật theo mapping tài liệu: Đàn Cầm Của Gió, Đàn Hoa, Đàn Lyre Cũ, Trống Arataki và Trống Lễ Hội. Bảy profile còn lại hiển thị **Chưa hỗ trợ** và khóa phát cho đến khi có bảng phím/âm thanh đủ xác minh. Xem [checklist V3](docs/auto-lyre-v3-checklist.md).
 
-Thuật toán v2 tự tìm giọng giai điệu theo track/kênh và ưu tiên giọng đó khi chọn cách dịch tông. Khi các ứng viên không rõ ràng hoặc chỉ có một giọng, ứng dụng dùng cách chọn toàn bài của v1. Việc nhận diện có thể sai; xem [checklist và kết quả v2](docs/auto-key-v2-checklist.md).
+Chương trình tự tìm cửa sổ Genshin Impact đang chạy và dùng phím PC mặc định của profile. Không cần chọn key, quãng tám, track hoặc bàn phím. Nhánh trống đọc kênh MIDI 10 rồi phối sang hai tiếng Ka/Don; bài không có phần trống sẽ được thông báo. Mọi chuyển đổi nằm trong bộ nhớ, không ghi đè MIDI gốc.
+
+Đàn giai điệu giữ cách chọn tông ưu tiên melody của v2 và bổ sung tối ưu chuỗi nốt khi nhận diện được một giọng đơn âm. Phím trùng cùng thời điểm được gộp, nốt cùng phím chồng nhau được cắt ở lần đánh lại. Việc nhận diện có thể sai; không đảm bảo mọi bản MIDI nghe giống nguyên bản. Engine hợp âm và vocal được kiểm thử bằng profile giả lập; Ukulele, Dư Âm và Vodyanitsa thực vẫn khóa vì chưa hiệu chuẩn trong game.
 
 ## Phát triển
 

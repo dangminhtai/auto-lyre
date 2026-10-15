@@ -13,6 +13,7 @@ public static class LyrePlayer
 
     public static void PressKey(VirtualKeyCode key) => Input.Keyboard.KeyDown(key);
     public static void ReleaseKey(VirtualKeyCode key) => Input.Keyboard.KeyUp(key);
+    public static void TapKey(VirtualKeyCode key) => Input.Keyboard.KeyPress(key);
 
     public static void NoteDown(int noteId, Layout layout, Instrument instrument)
         => InteractNote(noteId, layout, instrument, Input.Keyboard.KeyDown);

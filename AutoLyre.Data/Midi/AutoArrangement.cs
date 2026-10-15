@@ -38,7 +38,7 @@ public sealed class AutoArrangement
 
     public static AutoArrangement Create(RawMidiFile source, IReadOnlyList<bool> selectedTracks,
         IEnumerable<int> playable, bool merge = false, uint mergeMilliseconds = 0,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default, bool optimizeContour = false)
     {
         var allowed = playable.ToArray();
         var midi = source.Clone();
@@ -79,7 +79,21 @@ public sealed class AutoArrangement
         var melodyExact = melody.Melody.Count(n => allowed.Contains(n.NoteNumber - pitch.Offset));
         var v1MelodyExact = melody.Melody.Count(n => allowed.Contains(n.NoteNumber - v1.Offset));
         var v1Exact = sourceNotes.Count(n => allowed.Contains(n.NoteNumber - v1.Offset));
+        var contour = new Dictionary<Note, int>();
+        if (optimizeContour)
+        {
+            var line = (melody.Melody.Count > 0 ? melody.Melody.AsEnumerable() : sourceNotes)
+                .OrderBy(n => n.Time).ThenBy(n => n.NoteNumber).ToArray();
+            // Do not pretend polyphonic material is a single line.
+            if (line.Zip(line.Skip(1), (a, b) => a.EndTime <= b.Time).All(b => b))
+            {
+                var mapped = MelodyContour.Map(line.Select(n => (int)n.NoteNumber).ToArray(), pitch.Offset, allowed, cancellationToken);
+                for (var i = 0; i < line.Length; i++) contour[line[i]] = mapped[i];
+            }
+        }
         var baseline = sourceNotes.Count(n => allowed.Contains((int)n.NoteNumber));
+        melodyExact = melody.Melody.Count(n =>
+            (contour.TryGetValue(n, out var mapped) ? mapped : pitch.Map(n.NoteNumber, out _)) == n.NoteNumber - pitch.Offset);
         var counts = new int[3];
         var droppedEvents = 0;
         var intervals = new List<(int Note, long Start, long End)>();
@@ -93,6 +107,13 @@ public sealed class AutoArrangement
             foreach (var note in notes)
             {
                 var mapped = pitch.Map(note.NoteNumber, out var change);
+                if (contour.TryGetValue(note, out var optimized))
+                {
+                    mapped = optimized;
+                    var shifted = note.NoteNumber - pitch.Offset;
+                    change = mapped == shifted ? PitchChange.Exact :
+                        (mapped - shifted) % 12 == 0 ? PitchChange.Octave : PitchChange.Rounded;
+                }
                 counts[(int)change]++;
                 note.NoteNumber = (Melanchall.DryWetMidi.Common.SevenBitNumber)mapped;
                 intervals.Add((mapped, note.Time, note.EndTime));

@@ -10,6 +10,12 @@ namespace AutoLyre.Data.Properties;
 //  The SettingsSaving event is raised before the setting values are saved.
 public sealed partial class Settings
 {
+    [UserScopedSetting, DefaultSettingValue("")]
+    public string InstrumentProfileId
+    {
+        get => (string)this[nameof(InstrumentProfileId)];
+        set => this[nameof(InstrumentProfileId)] = value;
+    }
     protected override void OnPropertyChanged(object sender, PropertyChangedEventArgs e) => Save();
 
     protected override void OnSettingsLoaded(object sender, SettingsLoadedEventArgs e)

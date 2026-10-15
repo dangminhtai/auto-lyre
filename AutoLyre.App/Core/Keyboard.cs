@@ -306,6 +306,6 @@ public static class Keyboard
         Instrument.WindsongLyre => DefaultNotes,
         Instrument.FloralZither => DefaultNotes,
         Instrument.VintageLyre => VintageNotes,
-        _ => DefaultNotes
+        _ => throw new System.ArgumentOutOfRangeException(nameof(instrument))
     };
 }

@@ -49,6 +49,7 @@ internal static class UiVerification
         try
         {
             main.SettingsView.SelectedInstrument = Keyboard.InstrumentNames.First();
+            main.SettingsView.SelectedProfile = AutoLyre.Data.Midi.InstrumentProfiles.All[0];
             main.SettingsView.SelectedLayout = Keyboard.LayoutNames.First();
             main.SettingsView.UseSpeakers = false;
             main.SettingsView.HoldNotes = false;
@@ -59,7 +60,7 @@ internal static class UiVerification
             settings.Measure(new Size(900, 900));
             settings.Arrange(new Rect(0, 0, 900, 900));
             var elements = Descendants(settings).ToArray();
-            Program.Check(elements.OfType<ComboBox>().Count() == 2, "Compact settings must contain only instrument/layout selectors");
+            // Legacy settings view is not hosted by the V3 main window.
             Program.Check(!elements.OfType<ToggleSwitch>().Any(), "Hidden feature switches are still exposed");
             Program.Check(!elements.OfType<NumberBox>().Any(n => n.GetBindingExpression(NumberBox.ValueProperty)?.ParentBinding.Path.Path == "KeyOffset"));
             Program.Check(!elements.OfType<GroupBox>().Any(n => n.Header?.ToString() == "Transpose"));
@@ -123,17 +124,27 @@ internal static class UiVerification
             var player = new LyrePlayerView();
             player.InitializeComponent();
             player.DataContext = main.PlayerView;
-            Program.Check(Descendants(player).OfType<Expander>().Single().IsExpanded == false);
+            Program.Check(!Descendants(player).OfType<Expander>().Any());
+            Program.Check(Descendants(player).OfType<ComboBox>().Count() == 1, "Only the instrument dropdown is exposed");
+            Program.Check(Descendants(player).OfType<ComboBox>().Single().Items.Count == 12);
             var buttons = Descendants(player).OfType<Button>().ToArray();
             Program.Check(buttons.Count(b => b.Content?.ToString() != "Chọn đường dẫn Genshin…") == 3,
                 "Only file, play/pause and stop belong on the main screen");
             var finalOpen = main.PlayerView.OpenMidi(path);
             PumpUntil(() => finalOpen.IsCompleted);
             Render(player, 512, 480, "artifacts/simple-player-ready.png");
-            Descendants(player).OfType<Expander>().Single().IsExpanded = true;
+            main.SettingsView.SelectedProfile = AutoLyre.Data.Midi.InstrumentProfiles.Get("vodyanitsa");
+            PumpUntil(() => !main.PlayerView.IsAnalyzing);
+            Program.Check(!main.PlayerView.CanHitPlayPause && main.PlayerView.Playback is null && main.PlayerView.Plan is null);
+            Program.Check(main.PlayerView.AnalysisStatus.Contains("Chưa xác minh"));
             Render(player, 392, 700, "artifacts/simple-player-settings.png");
+            main.SettingsView.SelectedProfile = AutoLyre.Data.Midi.InstrumentProfiles.Get("arataki_drum");
+            PumpUntil(() => !main.PlayerView.IsAnalyzing);
+            Program.Check(!main.PlayerView.CanHitPlayPause && main.PlayerView.AnalysisStatus.Contains("kênh 10"));
+            main.SettingsView.SelectedProfile = AutoLyre.Data.Midi.InstrumentProfiles.All[0];
+            PumpUntil(() => !main.PlayerView.IsAnalyzing);
+            Program.Check(main.PlayerView.CanHitPlayPause);
             main.PlayerView.CloseFile();
-            Descendants(player).OfType<Expander>().Single().IsExpanded = false;
             Render(player, 392, 400, "artifacts/simple-player-empty.png");
             Console.WriteLine("UI: compact controls, single-file replacement, stop, errors, legacy key, mapping, sheet and cancellation verified; rendered 3 previews.");
         }

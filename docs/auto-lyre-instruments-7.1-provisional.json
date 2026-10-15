@@ -1,0 +1,510 @@
+{
+  "artifact": "AutoLyre Genshin 7.1 instrument mapping evidence and provisional profiles",
+  "repository": "https://github.com/dangminhtai/auto-lyre",
+  "reviewedCommit": "c09056e95ace60cca864e7c9ca9c2c86d494bc81",
+  "scope": "11 music gadgets and Vodyanitsa vocal skill; NOT a validated drop-in runtime config",
+  "strictPolicy": "Do not enable profiles marked needs_in_game_note_calibration or community_* in accuracy-critical playback before manual note verification.",
+  "instrumentCount": 12,
+  "instruments": [
+    {
+      "id": "windsong_lyre",
+      "displayName": "Windsong Lyre",
+      "family": "melodic",
+      "mappingStatus": "documented",
+      "noteMidiNumbers": [
+        48,
+        50,
+        52,
+        53,
+        55,
+        57,
+        59,
+        60,
+        62,
+        64,
+        65,
+        67,
+        69,
+        71,
+        72,
+        74,
+        76,
+        77,
+        79,
+        81,
+        83
+      ],
+      "source": "https://genshin-impact.fandom.com/wiki/Windsong_Lyre",
+      "sustain": "plucked"
+    },
+    {
+      "id": "floral_zither",
+      "displayName": "Floral Zither",
+      "family": "melodic",
+      "mappingStatus": "documented",
+      "noteMidiNumbers": [
+        48,
+        50,
+        52,
+        53,
+        55,
+        57,
+        59,
+        60,
+        62,
+        64,
+        65,
+        67,
+        69,
+        71,
+        72,
+        74,
+        76,
+        77,
+        79,
+        81,
+        83
+      ],
+      "source": "https://genshin-impact.fandom.com/wiki/Floral_Zither",
+      "sustain": "plucked"
+    },
+    {
+      "id": "vintage_lyre",
+      "displayName": "Vintage Lyre",
+      "family": "melodic",
+      "mappingStatus": "documented",
+      "noteMidiNumbers": [
+        48,
+        50,
+        51,
+        53,
+        55,
+        57,
+        58,
+        60,
+        62,
+        63,
+        65,
+        67,
+        69,
+        70,
+        72,
+        73,
+        75,
+        77,
+        79,
+        80,
+        82
+      ],
+      "source": "https://genshin-impact.fandom.com/wiki/Vintage_Lyre",
+      "sustain": "plucked",
+      "octaveScaleModes": [
+        "C Dorian (low & middle)",
+        "C Phrygian (high)"
+      ]
+    },
+    {
+      "id": "nightwind_horn",
+      "displayName": "Nightwind Horn",
+      "family": "melodic",
+      "mappingStatus": "needs_in_game_note_calibration",
+      "noteMidiNumbers": [
+        48,
+        50,
+        52,
+        53,
+        55,
+        57,
+        59,
+        60,
+        62,
+        64,
+        65,
+        67,
+        69,
+        71,
+        72,
+        74,
+        76,
+        77,
+        79,
+        81,
+        83
+      ],
+      "source": "https://genshin-impact.fandom.com/wiki/Tutorial/Adventure",
+      "sustain": "held",
+      "caution": "C-major 21-note pitch map provisional; holding notes is documented."
+    },
+    {
+      "id": "ukulele",
+      "displayName": "Ukulele",
+      "family": "chord",
+      "mappingStatus": "community_soundfont_not_game_verified",
+      "noteMidiNumbers": [
+        60,
+        62,
+        64,
+        65,
+        67,
+        69,
+        71,
+        72,
+        74,
+        76,
+        77,
+        79,
+        81,
+        83
+      ],
+      "source": "https://github.com/StarryCosmosPiano/Genshin-Impact-Instrument-SoundFont/blob/main/docs/MIDI-Mapping.md",
+      "sustain": "plucked",
+      "chordActions": [
+        {
+          "triggerMidi": 84,
+          "chord": "C",
+          "nominalMidiPitches": [
+            60,
+            64,
+            67
+          ]
+        },
+        {
+          "triggerMidi": 86,
+          "chord": "Dm",
+          "nominalMidiPitches": [
+            62,
+            65,
+            69
+          ]
+        },
+        {
+          "triggerMidi": 88,
+          "chord": "Em",
+          "nominalMidiPitches": [
+            64,
+            67,
+            71
+          ]
+        },
+        {
+          "triggerMidi": 89,
+          "chord": "F",
+          "nominalMidiPitches": [
+            65,
+            69,
+            72
+          ]
+        },
+        {
+          "triggerMidi": 91,
+          "chord": "G",
+          "nominalMidiPitches": [
+            67,
+            71,
+            74
+          ]
+        },
+        {
+          "triggerMidi": 93,
+          "chord": "Am",
+          "nominalMidiPitches": [
+            69,
+            72,
+            76
+          ]
+        },
+        {
+          "triggerMidi": 95,
+          "chord": "G7",
+          "nominalMidiPitches": [
+            67,
+            71,
+            74,
+            77
+          ]
+        }
+      ],
+      "caution": "Trigger pitches from Original with Chords SoundFont, not verified actual in-game MIDI numbering; chord samples can have their own voicings."
+    },
+    {
+      "id": "lingering_euphonia",
+      "displayName": "Lingering Euphonia",
+      "family": "chord",
+      "mappingStatus": "community_soundfont_not_game_verified",
+      "noteMidiNumbers": [
+        48,
+        50,
+        52,
+        53,
+        55,
+        57,
+        59,
+        60,
+        62,
+        64,
+        65,
+        67,
+        69,
+        71
+      ],
+      "source": "https://github.com/StarryCosmosPiano/Genshin-Impact-Instrument-SoundFont/blob/main/docs/MIDI-Mapping.md",
+      "sustain": "plucked",
+      "chordActions": [
+        {
+          "triggerMidi": 72,
+          "chord": "C",
+          "nominalMidiPitches": [
+            60,
+            64,
+            67
+          ]
+        },
+        {
+          "triggerMidi": 74,
+          "chord": "Dm",
+          "nominalMidiPitches": [
+            62,
+            65,
+            69
+          ]
+        },
+        {
+          "triggerMidi": 76,
+          "chord": "Em",
+          "nominalMidiPitches": [
+            64,
+            67,
+            71
+          ]
+        },
+        {
+          "triggerMidi": 77,
+          "chord": "F",
+          "nominalMidiPitches": [
+            65,
+            69,
+            72
+          ]
+        },
+        {
+          "triggerMidi": 79,
+          "chord": "G",
+          "nominalMidiPitches": [
+            67,
+            71,
+            74
+          ]
+        },
+        {
+          "triggerMidi": 81,
+          "chord": "Am",
+          "nominalMidiPitches": [
+            69,
+            72,
+            76
+          ]
+        },
+        {
+          "triggerMidi": 83,
+          "chord": "G7",
+          "nominalMidiPitches": [
+            67,
+            71,
+            74,
+            77
+          ]
+        }
+      ],
+      "caution": "Trigger pitches from Original with Chords SoundFont, not verified actual in-game MIDI numbering; chord sample voicing unverified."
+    },
+    {
+      "id": "leaping_spirit_piano",
+      "displayName": "Leaping Spirit Piano",
+      "family": "melodic",
+      "mappingStatus": "needs_in_game_note_calibration",
+      "noteMidiNumbers": [
+        48,
+        50,
+        52,
+        53,
+        55,
+        57,
+        59,
+        60,
+        62,
+        64,
+        65,
+        67,
+        69,
+        71,
+        72,
+        74,
+        76,
+        77,
+        79,
+        81,
+        83
+      ],
+      "source": "https://genshin-impact.fandom.com/wiki/Music_Gadget",
+      "sustain": "unknown",
+      "caution": "21-note C-major mapping is provisional, not confirmed via exact in-game pitch measurement."
+    },
+    {
+      "id": "harmonic_keys",
+      "displayName": "Harmonic Keys",
+      "family": "melodic",
+      "mappingStatus": "needs_in_game_note_calibration",
+      "noteMidiNumbers": [
+        48,
+        50,
+        52,
+        53,
+        55,
+        57,
+        59,
+        60,
+        62,
+        64,
+        65,
+        67,
+        69,
+        71,
+        72,
+        74,
+        76,
+        77,
+        79,
+        81,
+        83
+      ],
+      "source": "https://genshin-impact.fandom.com/wiki/Harmonic_Keys",
+      "sustain": "unknown",
+      "caution": "21-note C-major mapping is provisional, not confirmed via exact in-game pitch measurement."
+    },
+    {
+      "id": "arataki_drum",
+      "displayName": "Arataki Great and Glorious Drum",
+      "family": "percussion",
+      "mappingStatus": "game_keys_documented",
+      "noteMidiNumbers": null,
+      "source": "https://genshin-impact.fandom.com/wiki/Arataki%27s_Great_and_Glorious_Drum",
+      "strikes": [
+        {
+          "kind": "ka",
+          "pcKeys": [
+            "A",
+            "L"
+          ]
+        },
+        {
+          "kind": "don",
+          "pcKeys": [
+            "S",
+            "K"
+          ]
+        }
+      ],
+      "soundfontMidiSampleTriggers": [
+        60,
+        62
+      ],
+      "caution": "SF2 MIDI triggers not interchangeable with melodic notes or with four physical keys."
+    },
+    {
+      "id": "festive_drum",
+      "displayName": "Festive Drum",
+      "family": "percussion",
+      "mappingStatus": "game_keys_documented",
+      "noteMidiNumbers": null,
+      "source": "https://www.hoyodex.com/wiki/genshin-impact/festive-drum",
+      "strikes": [
+        {
+          "kind": "ka",
+          "pcKeys": [
+            "A",
+            "L"
+          ]
+        },
+        {
+          "kind": "don",
+          "pcKeys": [
+            "S",
+            "K"
+          ]
+        }
+      ],
+      "soundfontMidiSampleTriggers": null,
+      "caution": "No verified SF2 mapping available for Festive Drum; Ka/Don are the in-game event classes."
+    },
+    {
+      "id": "djem_djem_drum",
+      "displayName": "Djem Djem Drum",
+      "family": "percussion",
+      "mappingStatus": "game_controls_documented_sample_mapping_unverified",
+      "noteMidiNumbers": null,
+      "source": "https://game8.co/games/Genshin-Impact/archives/436691",
+      "strikes": [
+        {
+          "kind": "ka",
+          "pcKeys": null
+        },
+        {
+          "kind": "don",
+          "pcKeys": null
+        }
+      ],
+      "soundfontMidiSampleTriggers": [
+        60,
+        62,
+        64,
+        65,
+        72,
+        74,
+        76,
+        77
+      ],
+      "caution": "8 sampled triggers belong to SoundFont; in-game gadget reportedly plays two beat classes, physical key map needs calibration."
+    },
+    {
+      "id": "vodyanitsa",
+      "displayName": "Vodyanitsa (singing skill)",
+      "family": "vocal",
+      "mappingStatus": "community_14_pitches_octaves_unverified",
+      "noteMidiNumbers": null,
+      "source": "https://www.reddit.com/r/VodyanitsaMains/comments/1wqmnhj/how_to_find_musical_notes_to_sing_with_her/",
+      "pitchClassesPerRow": [
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "A",
+        "B"
+      ],
+      "pcKeyRows": {
+        "lower": [
+          "A",
+          "S",
+          "D",
+          "F",
+          "G",
+          "H",
+          "J"
+        ],
+        "upper": [
+          "Q",
+          "W",
+          "E",
+          "R",
+          "T",
+          "Y",
+          "U"
+        ]
+      },
+      "octaveMidiBases": null,
+      "polyphonic": false,
+      "caution": "14 notes reported, but actual sounding octaves and one-to-one key map MUST be calibrated from the character in-game. Vocal SF2 0–127 is an expanded virtual instrument and MUST NOT be used as an in-game key set."
+    }
+  ],
+  "manifestVersion": "1.0.0-research"
+}

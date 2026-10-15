@@ -101,6 +101,16 @@ public class SettingsPageViewModel : Screen
     public KeyValuePair<Keyboard.Instrument, string> SelectedInstrument { get; set; } =
         Keyboard.InstrumentNames.FirstOrDefault(p => (int)p.Key == Settings.SelectedInstrument);
 
+    public InstrumentProfile SelectedProfile { get; set; } =
+        InstrumentProfiles.All.FirstOrDefault(p => p.Id == Settings.InstrumentProfileId)
+        ?? InstrumentProfiles.All[Math.Clamp(Settings.SelectedInstrument, 0, 2)];
+
+    private void OnSelectedProfileChanged()
+    {
+        Settings.Modify(s => s.InstrumentProfileId = SelectedProfile.Id);
+        _events.Publish(this);
+    }
+
     public KeyValuePair<Keyboard.Layout, string> SelectedLayout { get; set; } =
         Keyboard.LayoutNames.FirstOrDefault(p => (int)p.Key == Settings.SelectedLayout);
 
@@ -263,6 +273,7 @@ public class SettingsPageViewModel : Screen
     {
         var instrument = (int)SelectedInstrument.Key;
         Settings.Modify(s => s.SelectedInstrument = instrument);
+        SelectedProfile = InstrumentProfiles.All[Math.Clamp(instrument, 0, 2)];
         _events.Publish(this);
     }
 

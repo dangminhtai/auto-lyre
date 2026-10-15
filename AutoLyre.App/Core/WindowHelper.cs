@@ -45,8 +45,19 @@ public static class WindowHelper
 
     private static IntPtr? FindWindowByProcessName(string? processName)
     {
-        var process = Process.GetProcessesByName(processName);
-        return process.FirstOrDefault(p => p.MainWindowHandle != IntPtr.Zero)?.MainWindowHandle;
+        // Discover the actual running game; no installation-path picker is needed.
+        foreach (var name in new[] { "GenshinImpact", "YuanShen" })
+        {
+            foreach (var process in Process.GetProcessesByName(name))
+            {
+                using (process)
+                {
+                    try { if (process.MainWindowHandle != IntPtr.Zero) return process.MainWindowHandle; }
+                    catch (InvalidOperationException) { /* Game exited during enumeration. */ }
+                }
+            }
+        }
+        return null;
     }
 
     [DllImport("user32.dll")]

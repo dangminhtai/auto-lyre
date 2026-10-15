@@ -18,6 +18,13 @@ internal static class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        Test("V3 profile catalog and unverified blocking", V3Verification.Profiles);
+        Test("V3 percussion uses channel 10 without transposition", V3Verification.Drums);
+        Test("V3 synthetic chord/vocal action semantics", V3Verification.ChordsAndVocal);
+        Test("V3 key lifecycle and retrigger ordering", V3Verification.Lifetime);
+        Test("V3 joint melody contour", V3Verification.Contour);
+        if (args.Length > 1 && args[0] == "--profile-corpus")
+            Test("V3 profile corpus", () => V3Verification.Corpus(args[1]));
         Test("Identity preserves all playable notes", () =>
         {
             var pitch = AutoPitch.Analyze(Default, Default);

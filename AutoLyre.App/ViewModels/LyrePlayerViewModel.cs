@@ -47,8 +47,13 @@ public class LyrePlayerViewModel : Screen,
     private int _generation;
     private bool _isShuttingDown;
     private readonly DispatcherTimer _focusTimer;
+    private readonly InstrumentOutput _actionOutput = new(
+        key => LyrePlayer.PressKey((VirtualKeyCode)key),
+        key => LyrePlayer.ReleaseKey((VirtualKeyCode)key),
+        key => LyrePlayer.TapKey((VirtualKeyCode)key));
 
     public AutoArrangement? Arrangement { get; private set; }
+    public InstrumentPlan? Plan { get; private set; }
     public bool IsAnalyzing { get; private set; }
     public string AnalysisStatus { get; private set; } = "Chọn bản nhạc .mid để bắt đầu";
 
@@ -135,7 +140,7 @@ public class LyrePlayerViewModel : Screen,
                 .Where(t => t.IsChecked)
                 .Any(t => t.CanBePlayed);
 
-            return !IsAnalyzing && Arrangement?.Total > 0 && Playback is not null
+            return !IsAnalyzing && SettingsPage.SelectedProfile.CanPlay && Plan?.Actions.Count > 0 && Playback is not null
                 && hasNotes
                 && MaximumTime > TimeSpan.Zero;
         }
@@ -229,7 +234,7 @@ public class LyrePlayerViewModel : Screen,
         ReleaseOutputs();
         Playback?.MoveToStart();
         MoveSlider(TimeSpan.Zero);
-        if (Arrangement?.Total > 0) AnalysisStatus = "Sẵn sàng";
+        if (Plan?.Actions.Count > 0) AnalysisStatus = "Sẵn sàng";
         UpdateButtons();
     }
 
@@ -291,6 +296,7 @@ public class LyrePlayerViewModel : Screen,
         _analysisCancellation = null;
         DisposePlayback();
         Arrangement = null;
+        Plan = null;
         IsAnalyzing = false;
         AnalysisStatus = "Chọn bản nhạc .mid để bắt đầu";
         MidiTracks.Clear();
@@ -451,35 +457,34 @@ public class LyrePlayerViewModel : Screen,
         _analysisCancellation = cancellation;
         DisposePlayback();
         Arrangement = null;
+        Plan = null;
         _main.PianoSheetView.Clear();
         var file = Playlist.OpenedFile;
-        if (file is null)
+        var profile = SettingsPage.SelectedProfile;
+        if (file is null || !profile.CanPlay)
         {
+            AnalysisStatus = profile.BlockedReason ?? "Chọn bản nhạc .mid để bắt đầu";
             IsAnalyzing = false;
             cancellation.Dispose();
             _analysisCancellation = null;
+            UpdateButtons();
             return;
         }
         IsAnalyzing = true;
         AnalysisStatus = "Đang chuẩn bị bài…";
         UpdateButtons();
         var selected = MidiTracks.Select(t => t.IsChecked).ToArray();
-        var instrument = SettingsPage.SelectedInstrument.Key;
-        var layout = SettingsPage.SelectedLayout.Key;
-        var allowed = Keyboard.GetNotes(instrument).ToArray();
-        var merge = Settings.MergeNotes;
-        var tolerance = Settings.MergeMilliseconds;
-        var speakers = Settings.UseSpeakers;
-        var hold = Settings.HoldNotes;
         try
         {
-            var arrangement = await Task.Run(() => AutoArrangement.Create(file.Midi, selected,
-                allowed, merge, tolerance, cancellation.Token), cancellation.Token);
+            var plan = await Task.Run(() => InstrumentPlan.Create(file.Midi, selected,
+                profile, cancellation.Token), cancellation.Token);
             if (generation != _generation || file != Playlist.OpenedFile) return;
-            Arrangement = arrangement;
-            AnalysisStatus = arrangement.Total > 0 ? "Sẵn sàng" : "Bài này không có nốt đàn để phát";
-            if (arrangement.Total == 0) return;
-            var playback = arrangement.Midi.GetPlayback();
+            Plan = plan;
+            Arrangement = plan.Arrangement;
+            AnalysisStatus = plan.Actions.Count > 0 ? "Sẵn sàng" : profile.Mode == InstrumentMode.Percussion
+                ? "Bản MIDI này không có phần trống trên kênh 10." : "Bài này không có nốt đàn để phát";
+            if (plan.Actions.Count == 0) return;
+            var playback = plan.Transport.GetPlayback();
             Playback = playback;
             playback.Speed = SettingsPage.SelectedSpeed.Speed;
             playback.InterruptNotesOnStop = true;
@@ -487,7 +492,20 @@ public class LyrePlayerViewModel : Screen,
             {
                 lock (_outputLock)
                     if (Playback == playback && e.Event is NoteEvent note)
-                        PlayNote(note, layout, instrument, speakers, hold);
+                    {
+                        var action = profile.Actions.FirstOrDefault(a => a.Id == note.NoteNumber);
+                        if (action is null) return;
+                        var down = note is NoteOnEvent && note.Velocity > 0;
+                        if (down && !WindowHelper.IsGameFocused())
+                        {
+                            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                            {
+                                if (Playback == playback) { playback.Stop(); AnalysisStatus = "Đã tạm dừng — chuyển lại Genshin để tiếp tục."; }
+                            }));
+                            return;
+                        }
+                        _actionOutput.Send(profile, action, down);
+                    }
             };
             playback.Finished += (_, _) => Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -517,6 +535,7 @@ public class LyrePlayerViewModel : Screen,
             if (generation == _generation)
             {
                 Arrangement = null;
+                Plan = null;
                 System.Diagnostics.Trace.TraceError(ex.ToString());
                 AnalysisStatus = "Không xử lý được bản nhạc. Hãy chọn một tệp MIDI khác.";
             }
@@ -553,18 +572,14 @@ public class LyrePlayerViewModel : Screen,
 
     private void OnNoteEvent(object? sender, MidiEventReceivedEventArgs e)
     {
-        if (e.Event is not NoteEvent note || note.Channel == 9) return;
-        var instrument = SettingsPage.SelectedInstrument.Key;
-        var copy = (NoteEvent)note.Clone();
-        copy.NoteNumber = (Melanchall.DryWetMidi.Common.SevenBitNumber)
-            AutoPitch.Direct(Keyboard.GetNotes(instrument)).Map(note.NoteNumber, out _);
-        PlayNote(copy, SettingsPage.SelectedLayout.Key, instrument, Settings.UseSpeakers, Settings.HoldNotes);
+        // The single-file player accepts only planned actions; legacy live MIDI input is disabled.
     }
 
     private void ReleaseOutputs()
     {
         lock (_outputLock)
         {
+            _actionOutput.ReleaseAll();
             foreach (var key in _heldKeys.Drain()) LyrePlayer.ReleaseKey(key);
             foreach (var key in _heldSpeakers.Drain())
                 _speakers?.SendEvent(new NoteOffEvent((Melanchall.DryWetMidi.Common.SevenBitNumber)key.Note,

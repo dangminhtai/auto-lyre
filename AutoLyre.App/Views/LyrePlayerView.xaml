@@ -3,12 +3,18 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:midi="clr-namespace:AutoLyre.Data.Midi;assembly=AutoLyre.Data"
     xmlns:s="https://github.com/canton7/Stylet">
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel>
             <TextBlock Text="Phát đàn từ MIDI" FontSize="26" FontWeight="SemiBold" />
-            <TextBlock Margin="0,8,0,24" Text="Mở đàn trong Genshin, chọn bài rồi nhấn Phát."
+            <TextBlock Margin="0,8,0,20" Text="Mở đàn trong Genshin, chọn đúng loại đàn rồi chọn bài."
                        TextWrapping="Wrap" Opacity="0.7" />
+
+            <Label Content="Loại đàn" Target="{Binding ElementName=InstrumentPicker}" Padding="0,0,0,6" />
+            <ComboBox x:Name="InstrumentPicker" MinHeight="44" Margin="0,0,0,20" HorizontalAlignment="Stretch"
+                      ItemsSource="{x:Static midi:InstrumentProfiles.All}"
+                      SelectedItem="{Binding SettingsPage.SelectedProfile}" DisplayMemberPath="DisplayName" />
 
             <Border Padding="16" CornerRadius="8" Background="{ui:ThemeResource ControlFillColorDefaultBrush}">
                 <StackPanel>
@@ -40,9 +46,6 @@
                         IsEnabled="{Binding CanHitPlayPause}" MinHeight="48" Padding="24,8" />
             </Grid>
 
-            <Expander Header="Thiết lập đàn" IsExpanded="False">
-                <ContentControl Margin="0,12,0,0" s:View.Model="{Binding SettingsPage}" />
-            </Expander>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

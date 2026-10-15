@@ -6,7 +6,7 @@
         <UseWPF>true</UseWPF>
         <StartupObject>AutoLyre.App.App</StartupObject>
         <ApplicationManifest>app.manifest</ApplicationManifest>
-        <Version>0.1.0</Version>
+        <Version>0.3.0</Version>
         <AssemblyName>AutoLyre</AssemblyName>
         <RootNamespace>AutoLyre.App</RootNamespace>
         <ApplicationIcon>item_windsong_lyre.ico</ApplicationIcon>
