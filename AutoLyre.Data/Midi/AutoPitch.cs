@@ -9,7 +9,7 @@ public enum PitchChange { Exact, Octave, Rounded }
 
 public sealed class AutoPitch
 {
-    public const string Version = "1";
+    public const string Version = "2-voice-weighted";
     public const int MinimumOffset = -27;
     public const int MaximumOffset = 24;
     private readonly int[] _notes;
@@ -48,6 +48,36 @@ public sealed class AutoPitch
     }
 
     public static AutoPitch Direct(IEnumerable<int> playable) => new(0, Validate(playable));
+
+    public static AutoPitch AnalyzeWeighted(IEnumerable<(int Note, double Weight)> source,
+        IEnumerable<int> playable, CancellationToken cancellationToken = default)
+    {
+        var notes = Validate(playable);
+        var input = source.ToArray();
+        if (input.Any(n => n.Note < 0 || n.Note > 127 || !double.IsFinite(n.Weight) || n.Weight <= 0))
+            throw new ArgumentException("Invalid weighted MIDI note.", nameof(source));
+        var histogram = input.GroupBy(n => n.Note).OrderBy(g => g.Key)
+            .Select(g => (Note: g.Key, Weight: g.Select(n => n.Weight).OrderBy(w => w).Sum())).ToArray();
+        (double Exact, double Unmatched, double Distance, int Shift, int Offset)? best = null;
+        var chosen = 0;
+        for (var offset = MinimumOffset; offset <= MaximumOffset; offset++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            double exact = 0, unmatched = 0, distance = 0;
+            foreach (var n in histogram)
+            {
+                var pitch = n.Note - offset;
+                if (notes.Contains(pitch)) { exact += n.Weight; continue; }
+                var sameClass = notes.Where(p => (p - pitch) % 12 == 0).ToArray();
+                if (sameClass.Length == 0) unmatched += n.Weight;
+                else distance += sameClass.Min(p => Math.Abs(p - pitch)) * n.Weight;
+            }
+            var score = (Math.Round(exact, 10), -Math.Round(unmatched, 10),
+                -Math.Round(distance, 10), -Math.Abs(offset), offset);
+            if (best is null || score.CompareTo(best.Value) > 0) { best = score; chosen = offset; }
+        }
+        return new AutoPitch(chosen, notes);
+    }
 
     public int Map(int source, out PitchChange change)
     {

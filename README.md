@@ -11,6 +11,8 @@
 
 Hỗ trợ hiện tại: Đàn Cầm Của Gió, Đàn Hoa, Đàn Lyre Cũ. Không cần chọn tông hoặc nốt gốc. Nốt ngoài khả năng của đàn sẽ được điều chỉnh; không đảm bảo mọi bản MIDI nghe giống nguyên bản.
 
+Thuật toán v2 tự tìm giọng giai điệu theo track/kênh và ưu tiên giọng đó khi chọn cách dịch tông. Khi các ứng viên không rõ ràng hoặc chỉ có một giọng, ứng dụng dùng cách chọn toàn bài của v1. Việc nhận diện có thể sai; xem [checklist và kết quả v2](docs/auto-key-v2-checklist.md).
+
 ## Phát triển
 
 Solution: `AutoLyre.sln`. Mã giao diện: `AutoLyre.App`; bộ xử lý MIDI: `AutoLyre.Data`.

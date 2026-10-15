@@ -29,6 +29,12 @@ public sealed class AutoArrangement
     public int BaselineExact { get; }
     public int Percussion { get; }
     public int DroppedEvents { get; }
+    public string MelodyMethod { get; private set; } = "";
+    public int MelodyTotal { get; private set; }
+    public int MelodyExact { get; private set; }
+    public int V1MelodyExact { get; private set; }
+    public int V1Exact { get; private set; }
+    public int V1Offset { get; private set; }
 
     public static AutoArrangement Create(RawMidiFile source, IReadOnlyList<bool> selectedTracks,
         IEnumerable<int> playable, bool merge = false, uint mergeMilliseconds = 0,
@@ -63,16 +69,25 @@ public sealed class AutoArrangement
                 Tolerance = new MetricTimeSpan(0, 0, 0, (int)Math.Min(mergeMilliseconds, int.MaxValue))
             });
 
-        var sourceNotes = midi.GetNotes().ToArray();
-        var pitch = AutoPitch.Analyze(sourceNotes.Select(n => (int)n.NoteNumber), allowed, cancellationToken);
+        // Reuse the same Note instances throughout detection, weighting and mapping.
+        var trackNotes = tracks.Select(t => t.GetNotes().ToArray()).ToArray();
+        var sourceNotes = trackNotes.SelectMany(n => n).ToArray();
+        var melody = MelodyAnalysis.Detect(trackNotes, cancellationToken);
+        var v1 = AutoPitch.Analyze(sourceNotes.Select(n => (int)n.NoteNumber), allowed, cancellationToken);
+        var pitch = melody.Melody.Count == 0 ? v1 :
+            AutoPitch.AnalyzeWeighted(melody.Weights(sourceNotes), allowed, cancellationToken);
+        var melodyExact = melody.Melody.Count(n => allowed.Contains(n.NoteNumber - pitch.Offset));
+        var v1MelodyExact = melody.Melody.Count(n => allowed.Contains(n.NoteNumber - v1.Offset));
+        var v1Exact = sourceNotes.Count(n => allowed.Contains(n.NoteNumber - v1.Offset));
         var baseline = sourceNotes.Count(n => allowed.Contains((int)n.NoteNumber));
         var counts = new int[3];
         var droppedEvents = 0;
         var intervals = new List<(int Note, long Start, long End)>();
-        foreach (var track in midi.GetTrackChunks())
+        for (var trackIndex = 0; trackIndex < tracks.Length; trackIndex++)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var notes = track.GetNotes().ToArray();
+            var track = tracks[trackIndex];
+            var notes = trackNotes[trackIndex];
             droppedEvents += track.Events.Count(e => e is NoteEvent) - notes.Length * 2;
             var metadata = track.GetTimedEvents().Where(e => e.Event is not NoteEvent).Cast<ITimedObject>().ToArray();
             foreach (var note in notes)
@@ -98,6 +113,11 @@ public sealed class AutoArrangement
                 end = Math.Max(end, n.End);
             }
         }
-        return new AutoArrangement(midi, pitch, counts[0], counts[1], counts[2], collisions, baseline, percussion, droppedEvents);
+        return new AutoArrangement(midi, pitch, counts[0], counts[1], counts[2], collisions, baseline, percussion, droppedEvents)
+        {
+            MelodyMethod = melody.Method, MelodyTotal = melody.Melody.Count,
+            MelodyExact = melodyExact, V1MelodyExact = v1MelodyExact,
+            V1Exact = v1Exact, V1Offset = v1.Offset
+        };
     }
 }

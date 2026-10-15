@@ -67,6 +67,48 @@ internal static class Program
                 Check(AutoPitch.Analyze(input, allowed).Offset == result.Offset);
             }
         });
+        Test("Automatic melody priority fixes audit counterexample and ignores track order", () =>
+        {
+            var melody = Enumerable.Range(0, 56).Select(i => new Note((SevenBitNumber)new[] {72,74,76,77,79,81,83}[i % 7], 360, i * 480L)).ToArray();
+            var backing = Enumerable.Range(0, 200).Select(i => new Note((SevenBitNumber)new[] {61,63,66,68,70}[i % 5], 90, i * 120L)).ToArray();
+            foreach (var reversed in new[] { false, true })
+            {
+                var chunks = new[] { melody.ToTrackChunk(), backing.ToTrackChunk() };
+                var source = new RawMidi(reversed ? chunks.Reverse().ToArray() : chunks);
+                var bytes = Bytes(source);
+                var result = AutoArrangement.Create(source, new[] {true, true}, Default);
+                Check(result.V1Offset == 1 && result.V1MelodyExact == 16);
+                Check(result.Pitch.Offset == 0 && result.MelodyTotal == 56 && result.MelodyExact == 56);
+                Check(result.Total == 256 && bytes.SequenceEqual(Bytes(source)));
+            }
+        });
+        Test("Sustained lower melody beats high chord accompaniment", () =>
+        {
+            var main = Enumerable.Range(0, 16).Select(i => new Note((SevenBitNumber)(60 + new[] {0,2,4,5}[i%4]), 400, i*480L)).ToArray();
+            var backing = Enumerable.Range(0, 64).SelectMany(i => new[] {73,78,82}.Select(p => new Note((SevenBitNumber)p, 60, i*120L))).ToArray();
+            var result = AutoArrangement.Create(new RawMidi(main.ToTrackChunk(), backing.ToTrackChunk()), new[] {true,true}, Default);
+            // Several transpositions preserve this four-note melody; offset zero is not uniquely required.
+            Check(result.MelodyTotal == 16 && result.MelodyExact == 16,
+                $"Melody={result.MelodyTotal}, exact={result.MelodyExact}, offset={result.Pitch.Offset}");
+        });
+        Test("Separate channels in one track retain melody evidence", () =>
+        {
+            var melody = Enumerable.Range(0, 56).Select(i => new Note((SevenBitNumber)new[] {72,74,76,77,79,81,83}[i%7], 360, i*480L)).ToArray();
+            var backing = Enumerable.Range(0, 200).Select(i => new Note((SevenBitNumber)new[] {61,63,66,68,70}[i%5], 90, i*120L) { Channel = (FourBitNumber)1 }).ToArray();
+            var source = new RawMidi(melody.Concat(backing).ToTrackChunk());
+            var result = AutoArrangement.Create(source, new[] {true}, Default);
+            Check(result.Pitch.Offset == 0 && result.MelodyTotal == 56 && result.MelodyExact == 56);
+        });
+        Test("Single stream and ambiguous voices fall back without inventing melody", () =>
+        {
+            var line = Enumerable.Range(0, 16).Select(i => new Note((SevenBitNumber)(60+i%7), 120, i*240L)).ToArray();
+            var single = AutoArrangement.Create(new RawMidi(line.ToTrackChunk()), new[] {true}, Default);
+            Check(single.MelodyTotal == 0 && single.Pitch.Offset == single.V1Offset);
+            var tied = AutoArrangement.Create(new RawMidi(line.ToTrackChunk(), line.ToTrackChunk()), new[] {true,true}, Default);
+            Check(tied.MelodyMethod == "fallback-ambiguous" && tied.Pitch.Offset == tied.V1Offset);
+            Throws<ArgumentException>(() => AutoPitch.AnalyzeWeighted(new[] {(60, double.NaN)}, Default));
+            Throws<OperationCanceledException>(() => AutoPitch.AnalyzeWeighted(new[] {(60, 1.0)}, Default, new CancellationToken(true)));
+        });
         Test("Selected tracks preserve tempo and original MIDI", () =>
         {
             var source = new RawMidi(
@@ -196,7 +238,8 @@ internal static class Program
                     var timer = Stopwatch.StartNew();
                     var result = AutoArrangement.Create(midi, selected, allowed);
                     var ms = timer.Elapsed.TotalMilliseconds;
-                    Check(result.Exact >= result.BaselineExact, "Auto regressed against offset zero");
+                    // v2 may trade accompaniment matches for melody; retain v1 as a measured baseline.
+                    Check(result.V1Exact >= result.BaselineExact, "v1 baseline regressed against offset zero");
                     Check(result.Midi.GetNotes().All(n => allowed.Contains((int)n.NoteNumber)), "Invalid output pitch");
                     Check(result.Total == result.Midi.GetNotes().Count, "Note count changed");
                     Check(original.SequenceEqual(Bytes(midi)), "Input mutated");
@@ -220,6 +263,12 @@ internal static class Program
                         result.DroppedEvents,
                         result.BaselineExact,
                         result.Pitch.Offset,
+                        result.MelodyMethod,
+                        result.MelodyTotal,
+                        result.MelodyExact,
+                        result.V1MelodyExact,
+                        result.V1Exact,
+                        result.V1Offset,
                         Milliseconds = ms
                     });
                 }
