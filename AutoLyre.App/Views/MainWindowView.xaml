@@ -1,0 +1,19 @@
+<ui:UiWindow
+    x:Class="AutoLyre.App.Views.MainWindowView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:s="https://github.com/canton7/Stylet"
+    Title="{Binding Title}" Width="560" Height="580" MinWidth="440" MinHeight="460"
+    Background="{ui:ThemeResource ApplicationBackgroundBrush}"
+    ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica"
+    WindowCornerPreference="Round" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <ui:TitleBar Grid.Row="0" Title="{Binding Title}" />
+        <ContentControl Grid.Row="1" Margin="24,16,24,24" s:View.Model="{Binding PlayerView}" />
+    </Grid>
+</ui:UiWindow>

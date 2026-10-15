@@ -1,0 +1,21 @@
+<UserControl
+    x:Class="AutoLyre.App.Views.SettingsPageView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:s="https://github.com/canton7/Stylet"
+    xmlns:core="clr-namespace:AutoLyre.App.Core">
+    <StackPanel>
+        <Label Content="Loại đàn" Target="{Binding ElementName=InstrumentPicker}" Padding="0,0,0,4" />
+        <ComboBox x:Name="InstrumentPicker" MinHeight="40" HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Static core:Keyboard.InstrumentNames}"
+                  SelectedItem="{Binding SelectedInstrument}" DisplayMemberPath="Value" />
+        <Label Content="Bàn phím" Target="{Binding ElementName=LayoutPicker}" Margin="0,12,0,0" Padding="0,0,0,4" />
+        <ComboBox x:Name="LayoutPicker" MinHeight="40" HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Static core:Keyboard.LayoutNames}"
+                  SelectedItem="{Binding SelectedLayout}" DisplayMemberPath="Value" />
+        <Button Margin="0,16,0,0" Content="Chọn đường dẫn Genshin…" Command="{s:Action SetLocation}"
+                HorizontalAlignment="Left" MinHeight="40" Padding="12,8" />
+        <TextBlock Margin="0,4,0,0" Text="{Binding GameLocation}" TextTrimming="CharacterEllipsis"
+                   ToolTip="{Binding GameLocation}" Opacity="0.65" />
+    </StackPanel>
+</UserControl>

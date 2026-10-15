@@ -1,0 +1,48 @@
+<UserControl
+    x:Class="AutoLyre.App.Views.LyrePlayerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:s="https://github.com/canton7/Stylet">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel>
+            <TextBlock Text="Phát đàn từ MIDI" FontSize="26" FontWeight="SemiBold" />
+            <TextBlock Margin="0,8,0,24" Text="Mở đàn trong Genshin, chọn bài rồi nhấn Phát."
+                       TextWrapping="Wrap" Opacity="0.7" />
+
+            <Border Padding="16" CornerRadius="8" Background="{ui:ThemeResource ControlFillColorDefaultBrush}">
+                <StackPanel>
+                    <Button Content="Chọn bản nhạc" Command="{s:Action OpenFile}"
+                            HorizontalAlignment="Left" MinHeight="44" Padding="16,8" />
+                    <TextBlock Margin="0,16,0,4" FontSize="18" FontWeight="SemiBold"
+                               Text="{Binding Playlist.OpenedFile.Title, TargetNullValue=Chưa chọn bài, FallbackValue=Chưa chọn bài}"
+                               TextTrimming="CharacterEllipsis" ToolTip="{Binding Playlist.OpenedFile.Path}" />
+                    <TextBlock Text="{Binding AnalysisStatus}" TextWrapping="Wrap" Opacity="0.7" />
+                </StackPanel>
+            </Border>
+
+            <Slider Margin="0,24,0,4" IsMoveToPointEnabled="True" IsEnabled="{Binding CanHitPlayPause}"
+                    Value="{Binding SongPosition}" Maximum="{Binding MaximumTime.TotalSeconds}"
+                    AutomationProperties.Name="Vị trí phát" />
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Left" Text="{Binding CurrentTime, StringFormat=m\\:ss}" Opacity="0.7" />
+                <TextBlock HorizontalAlignment="Right" Text="{Binding MaximumTime, StringFormat=m\\:ss}" Opacity="0.7" />
+            </DockPanel>
+            <Grid Margin="0,20,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ui:Button Grid.Column="0" Content="{Binding PlayPauseText}" Command="{s:Action PlayPause}"
+                        IsEnabled="{Binding CanHitPlayPause}" MinHeight="48" FontWeight="SemiBold"
+                        HorizontalAlignment="Stretch" Appearance="Primary" />
+                <Button Grid.Column="1" Margin="12,0,0,0" Content="Dừng" Command="{s:Action Stop}"
+                        IsEnabled="{Binding CanHitPlayPause}" MinHeight="48" Padding="24,8" />
+            </Grid>
+
+            <Expander Header="Thiết lập đàn" IsExpanded="False">
+                <ContentControl Margin="0,12,0,0" s:View.Model="{Binding SettingsPage}" />
+            </Expander>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
