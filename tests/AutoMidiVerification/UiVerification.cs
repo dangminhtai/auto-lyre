@@ -129,7 +129,7 @@ internal static class UiVerification
             Program.Check(Descendants(player).OfType<ComboBox>().Count() == 1, "Only the instrument dropdown is exposed");
             Program.Check(Descendants(player).OfType<ComboBox>().Single().Items.Count == 12);
             var buttons = Descendants(player).OfType<Button>().ToArray();
-            Program.Check(buttons.Count(b => b.Content?.ToString() != "Chọn đường dẫn Genshin…") == 5,
+            Program.Check(buttons.Count(b => b.Content?.ToString() != "Chọn đường dẫn Genshin…") == 6,
                 "File, audio, cancel, play/pause and stop belong on the main screen");
             var converted = new TaskCompletionSource<string>();
             main.PlayerView.AudioConverter = new FakeAudio((_, progress, _) =>
@@ -140,6 +140,7 @@ internal static class UiVerification
             converted.SetResult(path);
             PumpUntil(() => conversion.IsCompleted);
             Program.Check(!main.PlayerView.IsConvertingAudio && main.PlayerView.CanHitPlayPause && main.PlaylistView.OpenedFile?.Path == path);
+            Program.Check(main.PlayerView.CanSaveConvertedMidi && main.PlayerView.ConvertedMidiPath == path);
             main.PlayerView.AudioConverter = new FakeAudio(async (_, _, token) =>
             { await Task.Delay(30000, token); return path; });
             var cancelled = main.PlayerView.ConvertAudio("fixture.wav");

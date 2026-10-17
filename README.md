@@ -9,7 +9,7 @@
 3. Nhấn **Chọn bản nhạc** rồi chọn tệp `.mid` hoặc `.midi`.
 4. Nhấn **Phát**. **Tạm dừng** giữ vị trí bài; **Dừng** đưa bài về đầu. Chuyển khỏi cửa sổ trò chơi sẽ tạm dừng phát.
 
-Với bản thu piano, nhấn **Audio → MIDI** và chọn WAV/MP3. Auto Lyre nhận dạng bằng Transkun V2 ngay trên máy, rồi tự nạp MIDI vào engine đàn đang chọn. Có nút **Hủy chuyển** trong khi xử lý; chuyển xong nhấn **Phát**. Audio gốc không bị sửa và không được tải lên server.
+Với bản thu piano, nhấn **Audio → MIDI** và chọn WAV/MP3. Auto Lyre nhận dạng bằng Transkun V2 ngay trên máy, rồi tự nạp MIDI vào engine đàn đang chọn. Có nút **Hủy chuyển** trong khi xử lý; chuyển xong nhấn **Phát** hoặc **Lưu MIDI…** để chọn tên và thư mục lưu bản MIDI nhận dạng (trước khi điều chỉnh theo đàn). Audio gốc không bị sửa và không được tải lên server.
 
 Lần đầu cần Python 3.12 và kết nối mạng để ứng dụng cài bộ chuyển/model vào môi trường riêng ở `%LOCALAPPDATA%\AutoLyre\Audio\runtime-v1`. Bản này nhận dạng bằng CPU nên bài dài có thể mất nhiều phút. MIDI sinh ra lưu riêng dưới `%LOCALAPPDATA%\AutoLyre\Audio\BaiDaChuyen`. Phù hợp piano solo; nhạc có giọng hát hoặc nhiều nhạc cụ có thể nhận sai nốt. Xem [kiểm tra Audio → MIDI](docs/audio-midi-checklist.md).
 

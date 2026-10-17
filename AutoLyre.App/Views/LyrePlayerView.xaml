@@ -23,6 +23,20 @@
                                 MinHeight="44" Padding="16,8" Margin="0,0,8,8" />
                         <Button Content="Audio → MIDI" Command="{s:Action OpenAudio}" IsEnabled="{Binding CanChooseFile}"
                                 MinHeight="44" Padding="16,8" Margin="0,0,0,8" />
+                        <Button Content="Lưu MIDI…" Command="{s:Action SaveConvertedMidi}"
+                                MinHeight="44" Padding="16,8" Margin="8,0,0,8"
+                                ToolTip="Lưu MIDI nhận dạng từ audio, trước khi điều chỉnh theo đàn">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding CanSaveConvertedMidi}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
                     </WrapPanel>
                     <TextBlock Text="{Binding AudioStatus}" TextWrapping="Wrap" Opacity="0.75">
                         <TextBlock.Style>

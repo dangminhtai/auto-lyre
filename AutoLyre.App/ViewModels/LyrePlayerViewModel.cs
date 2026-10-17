@@ -53,6 +53,8 @@ public class LyrePlayerViewModel : Screen,
     public bool IsConvertingAudio { get; private set; }
     public bool CanChooseFile => !IsConvertingAudio;
     public string AudioStatus { get; private set; } = "";
+    public string? ConvertedMidiPath { get; private set; }
+    public bool CanSaveConvertedMidi => !IsConvertingAudio && ConvertedMidiPath is not null;
     private readonly InstrumentOutput _actionOutput = new(
         key => LyrePlayer.PressKey((VirtualKeyCode)key),
         key => LyrePlayer.ReleaseKey((VirtualKeyCode)key),
@@ -227,6 +229,7 @@ public class LyrePlayerViewModel : Screen,
     public async Task OpenMidi(string path)
     {
         CancelAudio();
+        ConvertedMidiPath = null;
         await LoadMidiPath(path);
     }
 
@@ -260,6 +263,7 @@ public class LyrePlayerViewModel : Screen,
         using var cancellation = new CancellationTokenSource();
         _audioCancellation = cancellation;
         IsConvertingAudio = true;
+        ConvertedMidiPath = null;
         AudioStatus = "Đang chuẩn bị chuyển âm thanh…";
         AnalysisStatus = "Chờ chuyển âm thanh hoàn tất.";
         UpdateButtons();
@@ -275,6 +279,7 @@ public class LyrePlayerViewModel : Screen,
             // Loading the new file closes the previous player; the conversion has already ended.
             _audioCancellation = null;
             await LoadMidiPath(midiPath);
+            ConvertedMidiPath = midiPath;
             AudioStatus = Plan?.Actions.Count > 0 ? "Đã chuyển và nạp bản nhạc. Nhấn Phát để chơi đàn." : "Đã chuyển sang MIDI.";
         }
         catch (OperationCanceledException)
@@ -298,6 +303,31 @@ public class LyrePlayerViewModel : Screen,
     }
 
     public void CancelAudio() => _audioCancellation?.Cancel();
+
+    public void SaveConvertedMidi()
+    {
+        if (!CanSaveConvertedMidi) return;
+        var source = ConvertedMidiPath!;
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = "Lưu bản MIDI đã chuyển",
+            Filter = "Bản nhạc MIDI (*.mid)|*.mid",
+            DefaultExt = ".mid", AddExtension = true, OverwritePrompt = true,
+            FileName = System.IO.Path.GetFileName(source)
+        };
+        if (dialog.ShowDialog() != true) return;
+        try
+        {
+            if (!string.Equals(System.IO.Path.GetFullPath(source), System.IO.Path.GetFullPath(dialog.FileName), StringComparison.OrdinalIgnoreCase))
+                System.IO.File.Copy(source, dialog.FileName, overwrite: true);
+            AudioStatus = "Đã lưu MIDI: " + dialog.FileName;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Trace.TraceError(ex.ToString());
+            AudioStatus = "Không lưu được MIDI. Hãy kiểm tra quyền ghi hoặc chọn thư mục khác.";
+        }
+    }
 
     public void Stop()
     {
