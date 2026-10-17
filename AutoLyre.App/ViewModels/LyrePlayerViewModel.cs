@@ -12,6 +12,7 @@ using AutoLyre.Data.Midi;
 using AutoLyre.Data.Notification;
 using AutoLyre.Data.Properties;
 using AutoLyre.App.Core;
+using AutoLyre.App.Audio;
 using AutoLyre.App.ModernWPF.Errors;
 using Melanchall.DryWetMidi.Core;
 using Melanchall.DryWetMidi.Interaction;
@@ -47,6 +48,11 @@ public class LyrePlayerViewModel : Screen,
     private int _generation;
     private bool _isShuttingDown;
     private readonly DispatcherTimer _focusTimer;
+    private CancellationTokenSource? _audioCancellation;
+    public IAudioTranscriber AudioConverter { get; set; } = new AudioTranscriber();
+    public bool IsConvertingAudio { get; private set; }
+    public bool CanChooseFile => !IsConvertingAudio;
+    public string AudioStatus { get; private set; } = "";
     private readonly InstrumentOutput _actionOutput = new(
         key => LyrePlayer.PressKey((VirtualKeyCode)key),
         key => LyrePlayer.ReleaseKey((VirtualKeyCode)key),
@@ -140,7 +146,7 @@ public class LyrePlayerViewModel : Screen,
                 .Where(t => t.IsChecked)
                 .Any(t => t.CanBePlayed);
 
-            return !IsAnalyzing && SettingsPage.SelectedProfile.CanPlay && Plan?.Actions.Count > 0 && Playback is not null
+            return !IsConvertingAudio && !IsAnalyzing && SettingsPage.SelectedProfile.CanPlay && Plan?.Actions.Count > 0 && Playback is not null
                 && hasNotes
                 && MaximumTime > TimeSpan.Zero;
         }
@@ -208,6 +214,7 @@ public class LyrePlayerViewModel : Screen,
 
     public async Task OpenFile()
     {
+        if (IsConvertingAudio) return;
         var dialog = new Microsoft.Win32.OpenFileDialog
         {
             Title = "Chọn bài MIDI",
@@ -219,6 +226,12 @@ public class LyrePlayerViewModel : Screen,
 
     public async Task OpenMidi(string path)
     {
+        CancelAudio();
+        await LoadMidiPath(path);
+    }
+
+    private async Task LoadMidiPath(string path)
+    {
         CloseFile();
         try { await LoadFile(new MidiFile(new History(path, 0))); }
         catch (Exception ex)
@@ -227,6 +240,64 @@ public class LyrePlayerViewModel : Screen,
             AnalysisStatus = "Không mở được bản nhạc. Kiểm tra tệp còn tồn tại và có định dạng MIDI hợp lệ.";
         }
     }
+
+    public async Task OpenAudio()
+    {
+        if (IsConvertingAudio) return;
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Chọn bản thu piano",
+            Filter = "Âm thanh WAV hoặc MP3 (*.wav;*.mp3)|*.wav;*.mp3",
+            Multiselect = false
+        };
+        if (dialog.ShowDialog() == true) await ConvertAudio(dialog.FileName);
+    }
+
+    public async Task ConvertAudio(string path)
+    {
+        if (IsConvertingAudio || _isShuttingDown) return;
+        Stop();
+        using var cancellation = new CancellationTokenSource();
+        _audioCancellation = cancellation;
+        IsConvertingAudio = true;
+        AudioStatus = "Đang chuẩn bị chuyển âm thanh…";
+        AnalysisStatus = "Chờ chuyển âm thanh hoàn tất.";
+        UpdateButtons();
+        var progress = new Progress<string>(message =>
+        {
+            if (_audioCancellation == cancellation && !cancellation.IsCancellationRequested) AudioStatus = message;
+        });
+        try
+        {
+            var midiPath = await AudioConverter.ConvertAsync(path, progress, cancellation.Token);
+            cancellation.Token.ThrowIfCancellationRequested();
+            if (_isShuttingDown) return;
+            // Loading the new file closes the previous player; the conversion has already ended.
+            _audioCancellation = null;
+            await LoadMidiPath(midiPath);
+            AudioStatus = Plan?.Actions.Count > 0 ? "Đã chuyển và nạp bản nhạc. Nhấn Phát để chơi đàn." : "Đã chuyển sang MIDI.";
+        }
+        catch (OperationCanceledException)
+        {
+            AudioStatus = "Đã hủy chuyển âm thanh.";
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Trace.TraceError(ex.ToString());
+            AudioStatus = ex is InvalidOperationException or System.IO.FileNotFoundException
+                ? ex.Message : "Không chuyển được bản thu. Hãy thử một tệp WAV hoặc MP3 khác.";
+        }
+        finally
+        {
+            if (_audioCancellation == cancellation) _audioCancellation = null;
+            IsConvertingAudio = false;
+            if (AnalysisStatus == "Chờ chuyển âm thanh hoàn tất.")
+                AnalysisStatus = Plan?.Actions.Count > 0 ? "Sẵn sàng" : "Chọn bản nhạc .mid để bắt đầu";
+            UpdateButtons();
+        }
+    }
+
+    public void CancelAudio() => _audioCancellation?.Cancel();
 
     public void Stop()
     {
@@ -291,6 +362,7 @@ public class LyrePlayerViewModel : Screen,
 
     public void CloseFile()
     {
+        CancelAudio();
         _generation++;
         _analysisCancellation?.Cancel();
         _analysisCancellation = null;

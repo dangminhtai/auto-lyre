@@ -18,6 +18,10 @@ internal static class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        if (args.Length > 1 && args[0] == "--audio-worker") return AudioVerification.Worker(args);
+        Test("Audio process arguments, failure and cancellation", () => AudioVerification.Processes().GetAwaiter().GetResult());
+        if (args.Length > 1 && args[0] == "--audio-real")
+            Test("Real Transkun audio to instrument plan", () => AudioVerification.Real(args[1]).GetAwaiter().GetResult());
         Test("V3 profile catalog and unverified blocking", V3Verification.Profiles);
         Test("V3 percussion uses channel 10 without transposition", V3Verification.Drums);
         Test("V3 synthetic chord/vocal action semantics", V3Verification.ChordsAndVocal);

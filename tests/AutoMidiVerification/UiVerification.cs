@@ -19,6 +19,7 @@ using StyletIoC;
 using Wpf.Ui.Mvvm.Contracts;
 using Wpf.Ui.Mvvm.Services;
 using FileModel = AutoLyre.Data.Midi.MidiFile;
+using AutoLyre.App.Audio;
 
 internal static class UiVerification
 {
@@ -128,8 +129,31 @@ internal static class UiVerification
             Program.Check(Descendants(player).OfType<ComboBox>().Count() == 1, "Only the instrument dropdown is exposed");
             Program.Check(Descendants(player).OfType<ComboBox>().Single().Items.Count == 12);
             var buttons = Descendants(player).OfType<Button>().ToArray();
-            Program.Check(buttons.Count(b => b.Content?.ToString() != "Chọn đường dẫn Genshin…") == 3,
-                "Only file, play/pause and stop belong on the main screen");
+            Program.Check(buttons.Count(b => b.Content?.ToString() != "Chọn đường dẫn Genshin…") == 5,
+                "File, audio, cancel, play/pause and stop belong on the main screen");
+            var converted = new TaskCompletionSource<string>();
+            main.PlayerView.AudioConverter = new FakeAudio((_, progress, _) =>
+            { progress.Report("Đang nhận dạng nốt piano…"); return converted.Task; });
+            var conversion = main.PlayerView.ConvertAudio("fixture.wav");
+            Program.Check(main.PlayerView.IsConvertingAudio && !main.PlayerView.CanHitPlayPause && !main.PlayerView.CanChooseFile);
+            Render(player, 392, 640, "artifacts/audio-converting.png");
+            converted.SetResult(path);
+            PumpUntil(() => conversion.IsCompleted);
+            Program.Check(!main.PlayerView.IsConvertingAudio && main.PlayerView.CanHitPlayPause && main.PlaylistView.OpenedFile?.Path == path);
+            main.PlayerView.AudioConverter = new FakeAudio(async (_, _, token) =>
+            { await Task.Delay(30000, token); return path; });
+            var cancelled = main.PlayerView.ConvertAudio("fixture.wav");
+            main.PlayerView.CancelAudio();
+            PumpUntil(() => cancelled.IsCompleted);
+            Program.Check(!main.PlayerView.IsConvertingAudio && main.PlayerView.AudioStatus.Contains("hủy"));
+            var stale = new TaskCompletionSource<string>();
+            main.PlayerView.AudioConverter = new FakeAudio((_, _, _) => stale.Task);
+            var staleJob = main.PlayerView.ConvertAudio("fixture.wav");
+            var replacement = main.PlayerView.OpenMidi(secondPath);
+            PumpUntil(() => replacement.IsCompleted);
+            stale.SetResult(path);
+            PumpUntil(() => staleJob.IsCompleted);
+            Program.Check(main.PlaylistView.OpenedFile?.Path == secondPath);
             var finalOpen = main.PlayerView.OpenMidi(path);
             PumpUntil(() => finalOpen.IsCompleted);
             Render(player, 512, 480, "artifacts/simple-player-ready.png");
@@ -193,6 +217,13 @@ internal static class UiVerification
         encoder.Save(stream);
         host.Content = null;
         host.Close();
+    }
+
+    private sealed class FakeAudio : IAudioTranscriber
+    {
+        private readonly Func<string, IProgress<string>, CancellationToken, Task<string>> _run;
+        public FakeAudio(Func<string, IProgress<string>, CancellationToken, Task<string>> run) => _run = run;
+        public Task<string> ConvertAsync(string source, IProgress<string> progress, CancellationToken token) => _run(source, progress, token);
     }
 
     private static IEnumerable<DependencyObject> Descendants(DependencyObject root)

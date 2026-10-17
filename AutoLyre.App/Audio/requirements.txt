@@ -1,0 +1,6 @@
+transkun==2.0.1
+torch==2.5.1
+torchaudio==2.5.1
+numpy==1.26.4
+setuptools==75.6.0
+imageio-ffmpeg==0.6.0

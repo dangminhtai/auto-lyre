@@ -18,8 +18,38 @@
 
             <Border Padding="16" CornerRadius="8" Background="{ui:ThemeResource ControlFillColorDefaultBrush}">
                 <StackPanel>
-                    <Button Content="Chọn bản nhạc" Command="{s:Action OpenFile}"
-                            HorizontalAlignment="Left" MinHeight="44" Padding="16,8" />
+                    <WrapPanel>
+                        <Button Content="Chọn bản nhạc" Command="{s:Action OpenFile}" IsEnabled="{Binding CanChooseFile}"
+                                MinHeight="44" Padding="16,8" Margin="0,0,8,8" />
+                        <Button Content="Audio → MIDI" Command="{s:Action OpenAudio}" IsEnabled="{Binding CanChooseFile}"
+                                MinHeight="44" Padding="16,8" Margin="0,0,0,8" />
+                    </WrapPanel>
+                    <TextBlock Text="{Binding AudioStatus}" TextWrapping="Wrap" Opacity="0.75">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding AudioStatus}" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <StackPanel Margin="0,8,0,0">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsConvertingAudio}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <ProgressBar IsIndeterminate="True" Height="4" />
+                        <Button Content="Hủy chuyển" Command="{s:Action CancelAudio}"
+                                HorizontalAlignment="Left" MinHeight="40" Margin="0,8,0,0" />
+                    </StackPanel>
                     <TextBlock Margin="0,16,0,4" FontSize="18" FontWeight="SemiBold"
                                Text="{Binding Playlist.OpenedFile.Title, TargetNullValue=Chưa chọn bài, FallbackValue=Chưa chọn bài}"
                                TextTrimming="CharacterEllipsis" ToolTip="{Binding Playlist.OpenedFile.Path}" />

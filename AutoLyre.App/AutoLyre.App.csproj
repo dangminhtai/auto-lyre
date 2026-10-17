@@ -6,7 +6,7 @@
         <UseWPF>true</UseWPF>
         <StartupObject>AutoLyre.App.App</StartupObject>
         <ApplicationManifest>app.manifest</ApplicationManifest>
-        <Version>0.3.0</Version>
+        <Version>0.4.0</Version>
         <AssemblyName>AutoLyre</AssemblyName>
         <RootNamespace>AutoLyre.App</RootNamespace>
         <ApplicationIcon>item_windsong_lyre.ico</ApplicationIcon>
@@ -33,6 +33,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Update="Audio\*.py;Audio\requirements.txt" CopyToOutputDirectory="PreserveNewest" />
         <None Include="..\docs\upstream\*.md" Link="NguonKeThua\%(Filename)%(Extension)">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
